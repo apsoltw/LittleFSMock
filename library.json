@@ -1,8 +1,13 @@
 {
     "name": "LittleFSMock",
     "version": "0.1.0",
-    "description": "Provide a simple mock of the LittleFS library",
+    "description": "Provides a simple mock of the LittleFS library from Arduino Espressif8266 framework",
     "keywords": "unit-testing, testing, tdd, testing-framework, LittleFS, mock",
+    "repository":
+    {
+      "type": "git",
+      "url": "https://github.com/apsoltw/LittleFSMock.git"
+    },
     "frameworks": "*",
     "platforms": "native",
     "authors":
@@ -12,6 +17,12 @@
       "url": "https://www.apsol.de",
       "maintainer": true
     },
-    "headers": "unity.h",
-    "license": "MIT"
+    "headers": "LittleFS.h",
+    "license": "MIT",
+    "examples":
+    {
+      "name": "unit-test",
+      "base": "test/test_MockLittleFS",
+      "files": ["TestMockLittleFS"]
+    }
   }
