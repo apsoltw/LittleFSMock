@@ -1,0 +1,17 @@
+{
+    "name": "LittleFSMock",
+    "version": "0.1.0",
+    "description": "Provide a simple mock of the LittleFS library",
+    "keywords": "unit-testing, testing, tdd, testing-framework, LittleFS, mock",
+    "frameworks": "*",
+    "platforms": "native",
+    "authors":
+    {
+      "name": "Torsten Wolf",
+      "email": "info@apsol.de",
+      "url": "https://www.apsol.de",
+      "maintainer": true
+    },
+    "headers": "unity.h",
+    "license": "MIT"
+  }
