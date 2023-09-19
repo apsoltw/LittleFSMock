@@ -22,7 +22,7 @@
     "examples":
     {
       "name": "unit-test",
-      "base": "test/test_MockLittleFS",
-      "files": ["TestMockLittleFS"]
+      "base": "test/test_LittleFSMock",
+      "files": ["TestLittleFSMock"]
     }
   }
