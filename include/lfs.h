@@ -404,8 +404,15 @@ typedef struct lfs {
 #ifdef LFS_MIGRATE
     struct lfs1 *lfs1;
 #endif
+
+    //Mock
+    char test_dir[256];
 } lfs_t;
 
+/// Mock functions ///
+// Provides the relative path in the real file system
+// Requires a littlefs object and the path in the lfs system
+const char* patch_path(lfs_t *lfs, const char* path);
 
 /// Filesystem functions ///
 

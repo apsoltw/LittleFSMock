@@ -81,6 +81,28 @@ void testFsIsMounted(void)
     TEST_ASSERT_TRUE(LittleFS.info(info));
 }
 
+void testFsInfo(void)
+{
+    FSInfo info;
+    LittleFS.info(info);
+    info.totalBytes = 1024;
+    LittleFS.mockSetInfo(info);
+
+    rawCreateFile("1234567890");
+    rawCreateFile("12345678901234567890", "fileInRoot.txt");
+    rawCreateFolder("folder");
+    rawCreateFile("1234567890123456789012345678901234567890", "folder/fileInFolder.txt");
+
+    FSInfo result;
+    LittleFS.info(result);
+    TEST_ASSERT_EQUAL_size_t(1024, result.totalBytes);
+    TEST_ASSERT_EQUAL_size_t(70, result.usedBytes);
+
+    rawRemoveFile("fileInRoot.txt");
+    rawRemoveFile("folder/fileInFolder.txt");
+    rawRemoveFolder("folder");
+}
+
 void testFsExists(void)
 {
     TEST_ASSERT_FALSE(LittleFS.exists(FILE_NAME));
@@ -248,9 +270,7 @@ void testFileFullName(void)
 {
     rawCreateFile();
     File file = LittleFS.open(FILE_NAME, "r");
-    String s = TEST_DIR;
-    s += FILE_NAME;
-    TEST_ASSERT_EQUAL_STRING(s.c_str(), file.fullName());
+    TEST_ASSERT_EQUAL_STRING(FILE_NAME, file.fullName());
     file.close();
 }
 
@@ -393,6 +413,7 @@ int main(int argc, char **argv)
     LittleFS.begin(argc, argv);
 
     RUN_TEST(testFsIsMounted);
+    RUN_TEST(testFsInfo);
     RUN_TEST(testFsExists);
     RUN_TEST(testFsRename);
     RUN_TEST(testFsCreateFolder);

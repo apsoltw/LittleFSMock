@@ -214,6 +214,8 @@ public:
     void end();
 
     bool format();
+    //Mock
+    bool mockSetInfo(FSInfo& info);
     bool info(FSInfo& info);
     bool info64(FSInfo64& info);
 

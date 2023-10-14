@@ -14,6 +14,18 @@
 #include <sys/stat.h>
 #include "lfs.h"
 
+char path_buffer [512];
+const char* patch_path(lfs_t *lfs, const char* path)
+{
+    if ( strncmp(lfs->test_dir, path, strlen(lfs->test_dir)) == 0)
+        // already patched
+        return path;
+
+    strcpy(path_buffer, lfs->test_dir);
+    strcat(path_buffer, path);
+    return path_buffer;
+}
+
 int lfs_format(lfs_t *lfs, const struct lfs_config *config)
 {
     return 0;
@@ -29,6 +41,7 @@ int lfs_unmount(lfs_t *lfs)
 
 int lfs_remove(lfs_t *lfs, const char *path)
 {
+    path = patch_path(lfs, path);
     int rc = remove(path);
     if (rc == -1) {
         rc = errno;
@@ -40,10 +53,15 @@ int lfs_remove(lfs_t *lfs, const char *path)
 }
 int lfs_rename(lfs_t *lfs, const char *oldpath, const char *newpath)
 {
-    return rename(oldpath, newpath);
+    char opp[512];
+    strcpy(opp, patch_path(lfs, oldpath));
+    newpath = patch_path(lfs, newpath);
+    return rename(opp, newpath);
 }
 int lfs_stat(lfs_t *lfs, const char *path, struct lfs_info *info)
 {
+    path = patch_path(lfs, path);
+
     struct stat buffer;
     
     int rc = stat(path, &buffer);
@@ -73,6 +91,7 @@ int lfs_removeattr(lfs_t *lfs, const char *path, uint8_t type)
 
 int lfs_file_open(lfs_t *lfs, lfs_file_t *file, const char *path, int flags)
 {
+    path = patch_path(lfs, path);
     /*
     LFS_O_RDONLY = 1,         // Open a file as read only
     LFS_O_WRONLY = 2,         // Open a file as write only
@@ -88,7 +107,10 @@ int lfs_file_open(lfs_t *lfs, lfs_file_t *file, const char *path, int flags)
         if (flags & LFS_O_APPEND)
             type = "a+";
         else
+        if (flags & LFS_O_CREAT)
             type = "w+";
+        else
+            type = "r+";
     }
     else if ((flags & LFS_O_RDONLY) == LFS_O_RDONLY)
     {
@@ -107,6 +129,7 @@ int lfs_file_open(lfs_t *lfs, lfs_file_t *file, const char *path, int flags)
 
 int lfs_file_opencfg(lfs_t *lfs, lfs_file_t *file, const char *path, int flags, const struct lfs_file_config *config)
 {
+    path = patch_path(lfs, path);
     return lfs_file_open(lfs, file, path, flags);
 }
 
@@ -166,11 +189,13 @@ lfs_soff_t lfs_file_size(lfs_t *lfs, lfs_file_t *file)
 
 int lfs_mkdir(lfs_t *lfs, const char *path)
 {
+    path = patch_path(lfs, path);
     return mkdir(path);
 }
 
 int lfs_dir_open(lfs_t *lfs, lfs_dir_t *dir, const char *path)
 {
+    path = patch_path(lfs, path);
     strcpy(dir->path, path);
     dir->pDir = opendir(path);
     return dir->pDir != NULL ? 0 : -1;
@@ -236,10 +261,45 @@ int lfs_dir_rewind(lfs_t *lfs, lfs_dir_t *dir)
 }
 
 /// Filesystem-level filesystem operations ///
+int internal_is_dir(const char * path)
+{
+    struct stat path_stat;
+    stat(path, &path_stat);
+    return !(S_ISREG(path_stat.st_mode));
+}
+
+int internal_size(const char * name)
+{
+    int dir_size = 0;
+    struct dirent * pDirent;
+    DIR * pDir = opendir(name);
+    while ((pDirent = readdir(pDir)) != NULL)
+    {
+        if ( strcmp(pDirent->d_name, ".") != 0 && strcmp(pDirent->d_name, "..") != 0 )
+        {
+            char buf [512];
+            strcpy(buf, name);
+            strcat(buf, pDirent->d_name);
+            if (internal_is_dir(buf))
+            {
+                strcat(buf, "/");
+                dir_size += internal_size(buf);
+            }
+            else
+            {
+                struct stat st;
+                stat(buf, &st);
+                int sz = st.st_size;
+                dir_size += sz;
+            }
+        }
+    }
+    return dir_size;
+}
 
 lfs_ssize_t lfs_fs_size(lfs_t *lfs)
 {
-    return 0;
+    return internal_size(lfs->test_dir);
 }
 
 int lfs_fs_traverse(lfs_t *lfs, int (*cb)(void *, lfs_block_t), void *data)

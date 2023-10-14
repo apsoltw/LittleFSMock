@@ -95,7 +95,7 @@ public:
             _lfs_cfg.attr_max = 0;
         }
 
-        _testDir = ".unittest/";
+        strcpy(_lfs.test_dir, ".unittest/");
     }
 
     ~LittleFSImpl() {
@@ -112,8 +112,6 @@ public:
             return false;
         }
         lfs_info info;
-        String p = patchPath(path);
-        path = p.c_str();
         int rc = lfs_stat(&_lfs, path, &info);
         return rc == 0;
     }
@@ -122,16 +120,20 @@ public:
         if (!_mounted || !pathFrom || !pathFrom[0] || !pathTo || !pathTo[0]) {
             return false;
         }
-        String pf = patchPath(pathFrom);
-        pathFrom = pf.c_str();
-        String pt = patchPath(pathTo);
-        pathTo = pt.c_str();
         int rc = lfs_rename(&_lfs, pathFrom, pathTo);
         if (rc != 0) {
             //DEBUGV("lfs_rename: rc=%d, from=`%s`, to=`%s`\n", rc, pathFrom, pathTo);
             return false;
         }
         return true;
+    }
+
+    //Mock
+    void mockSetInfo(FSInfo& info) {
+        _maxOpenFds = info.maxOpenFiles;
+        _blockSize = info.blockSize;
+        _pageSize = info.pageSize;
+        _size = info.totalBytes;
     }
 
     bool info(FSInfo& info) override {
@@ -141,7 +143,6 @@ public:
         info.maxOpenFiles = _maxOpenFds;
         info.blockSize = _blockSize;
         info.pageSize = _pageSize;
-        info.maxOpenFiles = _maxOpenFds;
         info.maxPathLength = LFS_NAME_MAX;
         info.totalBytes = _size;
         info.usedBytes = _getUsedBlocks() * _blockSize;
@@ -166,8 +167,6 @@ public:
         if (!_mounted || !path || !path[0]) {
             return false;
         }
-        String p = patchPath(path);
-        path = p.c_str();
         int rc = lfs_remove(&_lfs, path);
         if (rc != 0) {
             //DEBUGV("lfs_remove: rc=%d path=`%s`\n", rc, path);
@@ -191,8 +190,6 @@ public:
         if (!_mounted || !path || !path[0]) {
             return false;
         }
-        String p = patchPath(path);
-        path = p.c_str();
         int rc = lfs_mkdir(&_lfs, path);
         return (rc==0);
     }
@@ -215,9 +212,9 @@ public:
         if (argc >= 2 ) {
             for (int i = 0; i < argc; i++) {
                 if ( strcmp(argv[i], "--test-dir") == 0 && argc > i+1) {
-                    _testDir = argv[i+1];
-                    if (!_testDir.endsWith("/"))
-                        _testDir += "/";
+                    strcpy(_lfs.test_dir, argv[i+1] );
+                    if (_lfs.test_dir[strlen(_lfs.test_dir)-1] != '/')
+                        strcat(_lfs.test_dir, "/");
                     break;
                 }
             }
@@ -316,7 +313,7 @@ protected:
             lfs_unmount(&_lfs);
             _mounted = false;
         }
-        memset(&_lfs, 0, sizeof(_lfs));
+        //memset(&_lfs, 0, sizeof(_lfs));
         int rc = lfs_mount(&_lfs, &_lfs_cfg);
         if (rc==0) {
             _mounted = true;
@@ -391,12 +388,6 @@ protected:
     uint32_t _maxOpenFds;
 
     bool     _mounted;
-
-    //Mock
-    String _testDir;
-    String patchPath(const char* path) {
-        return _testDir + (path[0] == '/' ? path+1 : path);
-    }
 };
 
 

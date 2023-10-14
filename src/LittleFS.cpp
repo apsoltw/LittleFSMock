@@ -51,9 +51,6 @@ FileImplPtr LittleFSImpl::open(const char* path, OpenMode openMode, AccessMode a
         //DEBUGV("LittleFSImpl::open() called with too long filename\n");
         return FileImplPtr();
     }
-    String p = patchPath(path);
-    path = p.c_str();
-
     int flags = _getFlags(openMode, accessMode);
     auto fd = std::make_shared<lfs_file_t>();
 
@@ -107,8 +104,7 @@ DirImplPtr LittleFSImpl::openDir(const char *path) {
     }
     //Mock
     //char *pathStr = strdup(path); // Allow edits on our scratch copy
-    String p = patchPath(path);
-    char *pathStr = strdup(p.c_str()); // Allow edits on our scratch copy
+    char *pathStr = strdup(path); // Allow edits on our scratch copy
 
     // Get rid of any trailing slashes
     while (strlen(pathStr) && (pathStr[strlen(pathStr)-1]=='/')) {
@@ -176,7 +172,7 @@ DirImplPtr LittleFSImpl::openDir(const char *path) {
 
     //Mock - provide the original path (without test-dir prefix) to the instance
     //auto ret = std::make_shared<LittleFSDirImpl>(filter, this, dir, pathStr);
-    auto ret = std::make_shared<LittleFSDirImpl>(filter, this, dir, path);
+    auto ret = std::make_shared<LittleFSDirImpl>(filter, this, dir, pathStr);
     free(pathStr);
     return ret;
 }

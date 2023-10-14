@@ -333,6 +333,14 @@ bool FS::format() {
     return _impl->format();
 }
 
+bool FS::mockSetInfo(FSInfo& info){
+    if (!_impl) {
+        return false;
+    }
+    _impl->mockSetInfo(info);
+    return true;
+}
+
 bool FS::info(FSInfo& info){
     if (!_impl) {
         return false;

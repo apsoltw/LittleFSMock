@@ -109,6 +109,8 @@ public:
     virtual bool begin(int argc = 0, char **argv = nullptr) = 0;
     virtual void end() = 0;
     virtual bool format() = 0;
+    //Mock
+    virtual void mockSetInfo(FSInfo& info) = 0;
     virtual bool info(FSInfo& info) = 0;
     virtual bool info64(FSInfo64& info) = 0;
     virtual FileImplPtr open(const char* path, OpenMode openMode, AccessMode accessMode) = 0;
