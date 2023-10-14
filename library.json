@@ -1,6 +1,6 @@
 {
     "name": "LittleFSMock",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "description": "Provides a simple mock of the LittleFS library from Arduino Espressif8266 framework",
     "keywords": "unit-testing, testing, tdd, testing-framework, LittleFS, mock",
     "repository":
