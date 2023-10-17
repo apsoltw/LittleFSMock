@@ -14,6 +14,26 @@
 #include <sys/stat.h>
 #include "lfs.h"
 
+/*
+ * On windows open files in binary mode to prevent confusions with EOL
+ * use always \n only instead of translated \r\n
+ */
+#if defined(_WIN32)
+    #define OM_APPEND_ONLY "ab"
+    #define OM_APPEND_READ "ab+"
+    #define OM_READ_ONLY   "rb"
+    #define OM_READ_WRITE  "rb+"
+    #define OM_WRITE_ONLY  "wb"
+    #define OM_WRITE_READ  "wb+"
+#else
+    #define OM_APPEND_ONLY "a"
+    #define OM_APPEND_READ "a+"
+    #define OM_READ_ONLY   "r"
+    #define OM_READ_WRITE  "r+"
+    #define OM_WRITE_ONLY  "w"
+    #define OM_WRITE_READ  "w+"
+#endif
+
 char path_buffer [512];
 const char* patch_path(lfs_t *lfs, const char* path)
 {
@@ -105,23 +125,23 @@ int lfs_file_open(lfs_t *lfs, lfs_file_t *file, const char *path, int flags)
     if ((flags & LFS_O_RDWR) == LFS_O_RDWR)
     {
         if (flags & LFS_O_APPEND)
-            type = "a+";
+            type = OM_APPEND_READ;
         else
         if (flags & LFS_O_CREAT)
-            type = "w+";
+            type = OM_WRITE_READ;
         else
-            type = "r+";
+            type = OM_READ_WRITE;
     }
     else if ((flags & LFS_O_RDONLY) == LFS_O_RDONLY)
     {
-        type = "r";
+        type = OM_READ_ONLY;
     }
     else if ((flags & LFS_O_WRONLY) == LFS_O_WRONLY)
     {
         if (flags & LFS_O_APPEND)
-            type = "a";
+            type = OM_APPEND_ONLY;
         else
-            type = "w";
+            type = OM_WRITE_ONLY;
     }
     file->pFile = fopen(path, type);
     return file->pFile != NULL ? 0 : -1;
